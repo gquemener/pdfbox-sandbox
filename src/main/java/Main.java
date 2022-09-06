@@ -47,7 +47,16 @@ public class Main {
                     String.format(SOURCE_FILE_PATH_TEMPLATE, pageNumber),
                     doc
             );
+
+            /*
+              This mediaBox value should be computed.
+              That value should be computed against the original file matching page:
+              PDRectangle mediaBox = new PDRectangle(getWidthOfInputPdfPage(pageNumber), getHeightOfInputPdfPage(pageNumber));
+              Question is: how to implement getWidthOfInputPdfPage and getHeightOfInputPdfPage?
+             */
             PDRectangle mediaBox = PDRectangle.LETTER;
+
+
             PDPage page = new PDPage(mediaBox);
             doc.addPage(page);
             PDPageContentStream contents = new PDPageContentStream(doc, page);
