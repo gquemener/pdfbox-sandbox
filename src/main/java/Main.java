@@ -5,9 +5,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,14 +15,18 @@ public class Main {
     private static final String SOURCE_FILE_PATH_TEMPLATE = "./src/main/resources/page%s.png";
     private static final String OUTPUT_FILE_PATH = "./src/main/resources/result.pdf";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Overlay overlayer = new Overlay();
         overlayer.setOverlayPosition(Overlay.Position.FOREGROUND);
-        overlayer.setInputFile(INPUT_FILE_PATH);
+
+        PDDocument originalFile = PDDocument.load(new FileInputStream(INPUT_FILE_PATH));
+
+        overlayer.setInputPDF(originalFile);
 
         Map<Integer, PDDocument> overlays = new HashMap<>();
-        for (int pageNumber = 1; pageNumber < 6; pageNumber++) {
-            overlays.put(pageNumber, getAnnotationDocument(pageNumber));
+        for (int pageNumber = 1; pageNumber <= originalFile.getNumberOfPages(); pageNumber++) {
+            PDPage originalPage = originalFile.getPage(pageNumber - 1);
+            overlays.put(pageNumber, getAnnotationDocument(pageNumber, originalPage.getMediaBox()));
         }
 
         try {
@@ -40,22 +43,13 @@ public class Main {
         }
     }
 
-    private static PDDocument getAnnotationDocument(int pageNumber) {
+    private static PDDocument getAnnotationDocument(int pageNumber, PDRectangle mediaBox) {
         PDDocument doc = new PDDocument();
         try {
             PDImageXObject pdImage = PDImageXObject.createFromFile(
                     String.format(SOURCE_FILE_PATH_TEMPLATE, pageNumber),
                     doc
             );
-
-            /*
-              This mediaBox value should be computed.
-              That value should be computed against the original file matching page:
-              PDRectangle mediaBox = new PDRectangle(getWidthOfInputPdfPage(pageNumber), getHeightOfInputPdfPage(pageNumber));
-              Question is: how to implement getWidthOfInputPdfPage and getHeightOfInputPdfPage?
-             */
-            PDRectangle mediaBox = PDRectangle.LETTER;
-
 
             PDPage page = new PDPage(mediaBox);
             doc.addPage(page);
